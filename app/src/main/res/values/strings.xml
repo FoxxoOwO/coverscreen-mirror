@@ -1,4 +1,43 @@
 <resources>
     <string name="app_name">Cover Screen Mirror</string>
-    <string name="accessibility_desc">Dịch vụ hỗ trợ điều khiển màn hình phụ.</string>
+    <string name="accessibility_desc">Accessibility service for controlling secondary screen.</string>
+
+    <string name="permission_denied">Permission denied for screen capture</string>
+    <string name="mirroring_stopped">Mirroring stopped</string>
+    <string name="mirroring_started">Secondary screen mirroring started!</string>
+
+    <string name="confirm_mirroring_title">Confirm Mirroring</string>
+    <string name="confirm_mirroring_text">Do you want to start mirroring?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="confirm_main_screen_title">Confirm Main Screen</string>
+    <string name="confirm_main_screen_text">Do you want to start Main Screen mode? This will automatically clean up the system before running to avoid errors.</string>
+
+    <string name="mirror_screen_title">Mirror Screen</string>
+    <string name="mirror_screen_subtitle">Open main screen on external display</string>
+
+    <string name="ready">Ready</string>
+    <string name="not_ready">Not ready</string>
+
+    <string name="control_mode_header">CONTROL MODE</string>
+    <string name="accessibility_mode">Accessibility</string>
+    <string name="shizuku_mode">Shizuku</string>
+
+    <string name="shizuku_not_authorized">Shizuku not authorized</string>
+    <string name="shizuku_not_running">Shizuku not running</string>
+    <string name="shizuku_please_authorize">Please allow app access to Shizuku</string>
+    <string name="shizuku_please_start">Please start Shizuku on your phone</string>
+    <string name="grant_permission">Grant permission</string>
+
+    <string name="accessibility_not_enabled">Accessibility service not enabled</string>
+    <string name="accessibility_requirement_desc">Requires accessibility permission to respond to touch gestures</string>
+    <string name="enable_in_settings">Enable in Settings</string>
+    <string name="cannot_open_settings">Cannot open settings</string>
+
+    <string name="action_mirror">Mirror</string>
+    <string name="action_main_screen">Main Screen</string>
+    <string name="action_stop">Stop</string>
+
+    <string name="shizuku_lost_connection">Shizuku lost permission/connection! Restoring screen&#8230;</string>
 </resources>

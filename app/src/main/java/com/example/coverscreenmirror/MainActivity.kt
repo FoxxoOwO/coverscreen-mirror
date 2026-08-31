@@ -9,24 +9,21 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import com.example.coverscreenmirror.theme.CoverScreenMirrorTheme
 import rikka.shizuku.Shizuku
 import kotlin.concurrent.thread
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
 
 class MainActivity : ComponentActivity() {
 
@@ -35,7 +32,7 @@ class MainActivity : ComponentActivity() {
     private val screenCaptureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == RESULT_OK && result.data != null) {
+        if ((result.resultCode == RESULT_OK) && (result.data != null)) {
             startMirrorService(result.resultCode, result.data!!)
             launchCoverScreenActivity("MIRRORING")
             
@@ -43,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 thread {
                     try {
                         Thread.sleep(800) // Wait 800ms to let projection activate completely
-                    } catch (e: Exception) {}
+                    } catch (_: Exception) {}
                     runOnUiThread {
                         try {
                             val homeIntent = Intent(Intent.ACTION_MAIN).apply {
@@ -59,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         } else {
-            Toast.makeText(this, "Permission denied for screen capture", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -69,7 +66,7 @@ class MainActivity : ComponentActivity() {
             CoverScreenMirrorTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = androidx.compose.ui.graphics.Color(0xFF121212) // Dark background
+                    color = Color(0xFF121212) // Dark background
                 ) {
                     AppScreen(
                         activity = this,
@@ -99,8 +96,7 @@ class MainActivity : ComponentActivity() {
                         val process = method.invoke(null, arrayOf("sh", "-c", "wm size -d 1 reset"), null, null) as Process
                         process.waitFor()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -108,12 +104,12 @@ class MainActivity : ComponentActivity() {
 
     private fun startMirroring(goToHome: Boolean = false) {
         targetGoToHome = goToHome
-        val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val intent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             try {
                 val config = android.media.projection.MediaProjectionConfig.createConfigForDefaultDisplay()
                 mpm.createScreenCaptureIntent(config)
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 mpm.createScreenCaptureIntent()
             }
         } else {
@@ -125,7 +121,7 @@ class MainActivity : ComponentActivity() {
     private fun stopMirroring() {
         stopService(Intent(this, ScreenMirrorService::class.java))
         CoverScreenAccessibilityService.instance?.showNavigationBar(false)
-        Toast.makeText(this, "Đã dừng trình chiếu", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.mirroring_stopped), Toast.LENGTH_SHORT).show()
         thread {
             try {
                 if (Shizuku.pingBinder()) {
@@ -149,24 +145,30 @@ class MainActivity : ComponentActivity() {
             putExtra("RESULT_CODE", resultCode)
             putExtra("DATA", data)
         }
-        startForegroundService(serviceIntent)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 
     fun launchCoverScreenActivity(mode: String) {
-        val displayManager = getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+        val displayManager = getSystemService(DISPLAY_SERVICE) as android.hardware.display.DisplayManager
         val coverDisplay = displayManager.getDisplay(1) ?: displayManager.displays.firstOrNull { it.displayId != 0 }
         
         if (coverDisplay != null) {
             try {
                 val options = android.app.ActivityOptions.makeBasic()
-                options.launchDisplayId = coverDisplay.displayId
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    options.launchDisplayId = coverDisplay.displayId
+                }
                 val intent = Intent(this, CoverScreenActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     putExtra("MODE", mode)
                 }
                 startActivity(intent, options.toBundle())
                 android.util.Log.e("ScreenMirror", "CoverScreenActivity launched via ActivityOptions on display ${coverDisplay.displayId} with mode $mode")
-                Toast.makeText(this, "Đã bắt đầu trình chiếu màn hình phụ!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.mirroring_started), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 android.util.Log.e("ScreenMirror", "Failed to launch via ActivityOptions", e)
             }
@@ -219,7 +221,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
     var targetGoToHome by remember { mutableStateOf(false) }
 
     LaunchedEffect(controlMode) {
-        prefs.edit().putString("control_mode", controlMode).apply()
+        prefs.edit { putString("control_mode", controlMode) }
     }
 
     LaunchedEffect(Unit) {
@@ -242,7 +244,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
         Shizuku.addRequestPermissionResultListener(requestPermissionListener)
         
         if (shizukuAvailable && !hasShizukuPermission) {
-            try { Shizuku.requestPermission(0) } catch (e: Exception) {}
+            try { Shizuku.requestPermission(0) } catch (_: Exception) {}
         }
     }
 
@@ -251,6 +253,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
             thread {
                 try {
                     val appOps = activity.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+                    @Suppress("DEPRECATION")
                     val mode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                         appOps.unsafeCheckOpNoThrow(
                             "android:project_media",
@@ -258,7 +261,6 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                             activity.packageName
                         )
                     } else {
-                        @Suppress("DEPRECATION")
                         appOps.checkOpNoThrow(
                             "android:project_media",
                             android.os.Process.myUid(),
@@ -275,8 +277,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     } else {
                         android.util.Log.e("ScreenMirror", "PROJECT_MEDIA already allowed, skipping Shizuku command")
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -284,18 +285,18 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
 
     // Confirmation Dialog
     if (showConfirmDialog) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
             title = {
                 Text(
-                    text = "Xác nhận Phản chiếu",
+                    text = stringResource(R.string.confirm_mirroring_title),
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     color = Color.Black
                 )
             },
             text = {
                 Text(
-                    text = "Bạn có muốn khởi động chế độ Phản chiếu không?",
+                    text = stringResource(R.string.confirm_mirroring_text),
                     color = Color.DarkGray
                 )
             },
@@ -322,7 +323,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                 ) {
-                    Text("Có", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(stringResource(R.string.yes), color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -345,7 +346,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black)
                 ) {
-                    Text("Không", color = Color.Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(stringResource(R.string.no), color = Color.Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             },
             containerColor = Color(0xFFF2F2F7), // iOS System Background
@@ -356,8 +357,8 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
     if (showMainConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showMainConfirmDialog = false },
-            title = { Text("Xác nhận Màn Chính") },
-            text = { Text("Bạn có muốn khởi động chế độ Màn Chính không? Tính năng này sẽ tự động dọn dẹp hệ thống trước khi chạy để tránh lỗi.") },
+            title = { Text(stringResource(R.string.confirm_main_screen_title)) },
+            text = { Text(stringResource(R.string.confirm_main_screen_text)) },
             containerColor = Color(0xFFF2F2F7), // iOS System Background
             titleContentColor = Color.Black,
             textContentColor = Color.DarkGray,
@@ -391,7 +392,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                 ) {
-                    Text("Có", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(stringResource(R.string.yes), color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -402,7 +403,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black)
                 ) {
-                    Text("Không", color = Color.Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(stringResource(R.string.no), color = Color.Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             }
         )
@@ -438,14 +439,14 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Mirror Screen",
+                        text = stringResource(R.string.mirror_screen_title),
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.Black,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Mở màn chính ở bên ngoài",
+                        text = stringResource(R.string.mirror_screen_subtitle),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.DarkGray
                     )
@@ -477,7 +478,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isReady) "Sẵn sàng" else "Chưa bật",
+                            text = if (isReady) stringResource(R.string.ready) else stringResource(R.string.not_ready),
                             color = if (isReady) Color(0xFF34C759) else Color(0xFFFF8282),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -502,7 +503,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "CHẾ ĐỘ ĐIỀU KHIỂN",
+                        text = stringResource(R.string.control_mode_header),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.DarkGray,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -524,7 +525,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                             )
                         )
                         Text(
-                            text = "Trợ năng",
+                            text = stringResource(R.string.accessibility_mode),
                             color = Color.Black,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -544,7 +545,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                             )
                         )
                         Text(
-                            text = "Shizuku",
+                            text = stringResource(R.string.shizuku_mode),
                             color = Color.Black,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -563,13 +564,13 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (shizukuAvailable) "Shizuku chưa cấp quyền" else "Shizuku chưa hoạt động",
+                                    text = if (shizukuAvailable) stringResource(R.string.shizuku_not_authorized) else stringResource(R.string.shizuku_not_running),
                                     color = Color(0xFFFF453A),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (shizukuAvailable) "Vui lòng cho phép ứng dụng truy cập Shizuku" else "Hãy khởi động Shizuku trên điện thoại",
+                                    text = if (shizukuAvailable) stringResource(R.string.shizuku_please_authorize) else stringResource(R.string.shizuku_please_start),
                                     color = Color(0xFF8E8E93),
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -581,7 +582,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                                     shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
                                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
-                                    Text("Cấp quyền", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.grant_permission), color = Color.White, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -593,13 +594,13 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Dịch vụ trợ năng chưa bật",
+                                    text = stringResource(R.string.accessibility_not_enabled),
                                     color = Color(0xFFFF453A),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Yêu cầu quyền trợ năng để phản hồi cử chỉ vuốt chạm",
+                                    text = stringResource(R.string.accessibility_requirement_desc),
                                     color = Color(0xFF8E8E93),
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -610,14 +611,14 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                                         val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
                                         activity.startActivity(intent)
                                     } catch (e: Exception) {
-                                        Toast.makeText(activity, "Không thể mở cài đặt", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(activity, activity.getString(R.string.cannot_open_settings), Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
-                                Text("Bật trong Cài đặt", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(R.string.enable_in_settings), color = Color.White, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -647,7 +648,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
                     Text(
-                        text = "Phản chiếu",
+                        text = stringResource(R.string.action_mirror),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -670,7 +671,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
                     Text(
-                        text = "Màn Chính",
+                        text = stringResource(R.string.action_main_screen),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -692,7 +693,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
                     Text(
-                        text = "Dừng",
+                        text = stringResource(R.string.action_stop),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.Black, // Black text
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,

@@ -1,38 +1,38 @@
 # Cover Screen Mirror
 
-Ứng dụng hỗ trợ trình chiếu và điều khiển màn hình chính từ màn hình phụ (Cover Screen) của các thiết bị Samsung Galaxy Z Flip (hỗ trợ tối ưu cho Z Flip 5 / Z Flip 6).
+An application that supports mirroring and controlling the main screen from the cover screen of Samsung Galaxy Z Flip devices (optimized for Z Flip 5 / Z Flip 6).
 
-## 🌟 Tính năng nổi bật
+## 🌟 Highlights
 
-1. **Giao diện Đơn sắc Sang trọng (Premium Monochrome Theme)**:
-   - Giao diện thiết kế phẳng chuẩn High-Contrast, sử dụng tông màu Trắng - Đen - Xám tối giản.
-   - Trải nghiệm thị giác mượt mà, chuyên nghiệp và loại bỏ mọi chi tiết thừa.
+1. **Premium Monochrome Theme**:
+   - High-contrast flat design using a minimalist Black-White-Gray color palette.
+   - Smooth, professional visual experience that eliminates all unnecessary details.
 
-2. **Hai chế độ hoạt động cực mạnh**:
-   - **Phản chiếu (MediaProjection)**: Trình chiếu màn hình chính ra ngoài thông qua cơ chế ghi hình, hỗ trợ thanh điều hướng ảo (Home, Back, Recents) bên trái.
-   - **Màn Chính (VirtualDisplay + Shizuku)**: Can thiệp sâu vào hệ thống để gọi trực tiếp giao diện gốc lên màn hình phụ, tương tác đa điểm siêu mượt.
+2. **Two Powerful Operating Modes**:
+   - **Mirroring (MediaProjection)**: Projects the main screen externally via a recording mechanism, supporting a virtual navigation bar (Home, Back, Recents) on the left.
+   - **Main Screen (VirtualDisplay + Shizuku)**: Deep system integration to call the native UI directly onto the cover screen with super-smooth multi-touch interaction.
 
-3. **Công nghệ "Diệt Zombie" (Tự động dọn dẹp rác hệ thống)**:
-   - Tự động phát hiện và dọn dẹp các tiến trình ngầm Shizuku bị kẹt (`mirror_service`) từ những lần đóng ứng dụng ngang hoặc sập nguồn trước đó.
-   - Đảm bảo thiết bị luôn giải phóng RAM, chạy ổn định, và đánh bại hoàn toàn lỗi "Tự khởi động lại" (Soft Reboot) kinh điển của Samsung Framework.
+3. **"Zombie Killer" Technology (Automatic System Cleanup)**:
+   - Automatically detects and cleans up stuck Shizuku background processes (`mirror_service`) from previous app crashes or forced shutdowns.
+   - Ensures the device always frees up RAM, runs stably, and completely defeats the classic Samsung Framework "Soft Reboot" bug.
 
-4. **Đồng bộ Luồng khởi tạo tĩnh**:
-   - Lệnh điều khiển xuất hình ảnh được đồng bộ tuyệt đối với vòng đời của lõi Shizuku. Hệ thống tự động chờ dịch vụ kết nối hoàn tất 100% rồi mới bắt đầu truyền hình, loại bỏ triệt để lỗi "Màn hình đen" lúc khởi chạy.
+4. **Static Initialization Stream Sync**:
+   - Image output control commands are perfectly synchronized with the Shizuku core lifecycle. The system automatically waits for the service to be 100% connected before starting the stream, thoroughly eliminating the "Black Screen" error at launch.
 
-5. **Lách giới hạn cảm biến gập mở**:
-   - Tự động chèn lệnh `cmd device_state state 4` ngầm để "đánh lừa" hệ thống rằng máy đang được mở, nhằm duy trì chất lượng xuất hình tối đa mà không bị giới hạn bởi tính năng tiết kiệm pin. Hoàn trả trạng thái tức thời khi ấn Dừng.
+5. **Folding Sensor Limit Bypass**:
+   - Automatically injects the `cmd device_state state 4` command in the background to "trick" the system into thinking the device is open. This maintains maximum output quality without being restricted by battery-saving features. Instantly restores the state when pressing Stop.
 
-## 📱 Yêu cầu hệ thống
+## 📱 System Requirements
 
-- Thiết bị: Samsung Galaxy Z Flip (Đã test và tối ưu hoàn hảo trên Z Flip 5 / Z Flip 6 chạy One UI 6 / Android 14).
-- Cấp quyền: Trợ năng (Accessibility) hoặc Shizuku (Khuyên dùng Shizuku để đạt độ trễ cảm ứng 0ms).
+- Device: Samsung Galaxy Z Flip (Tested and perfectly optimized on Z Flip 5 / Z Flip 6 running One UI 6 / Android 14).
+- Permissions: Accessibility or Shizuku (Shizuku is recommended for 0ms touch latency).
 
-## 🚀 Hướng dẫn sử dụng
+## 🚀 How to Use
 
-1. Mở ứng dụng từ màn hình trong (hoặc từ Cover Screen nếu có launcher hỗ trợ).
-2. Chọn lõi điều khiển: **Trợ năng** hoặc **Shizuku**.
-3. Chọn tính năng:
-   - **Phản chiếu**: Chạy qua Screen Record.
-   - **Màn Chính**: Gọi trực tiếp hệ thống.
-4. Bấm **Có** ở hộp thoại xác nhận viền tương phản. Gập máy lại và trải nghiệm.
-5. Khi kết thúc, bấm nút **Dừng** để hoàn trả thiết bị về trạng thái gốc.
+1. Open the app from the inner screen (or from the Cover Screen if using a supported launcher).
+2. Select control core: **Accessibility** or **Shizuku**.
+3. Select feature:
+   - **Mirroring**: Runs via Screen Record.
+   - **Main Screen**: Directly calls the system UI.
+4. Click **Yes** on the high-contrast confirmation dialog. Fold the device and enjoy.
+5. When finished, press the **Stop** button to return the device to its original state.

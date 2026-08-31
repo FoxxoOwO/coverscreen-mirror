@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Cover Screen Mirror</string>
+    <string name="accessibility_desc">Služba usnadnění pro ovládání sekundární obrazovky.</string>
+
+    <string name="permission_denied">Oprávnění pro zachycení obrazovky bylo zamítnuto</string>
+    <string name="mirroring_stopped">Zrcadlení zastaveno</string>
+    <string name="mirroring_started">Zrcadlení na sekundární obrazovku spuštěno!</string>
+
+    <string name="confirm_mirroring_title">Potvrdit zrcadlení</string>
+    <string name="confirm_mirroring_text">Chcete spustit režim zrcadlení?</string>
+    <string name="yes">Ano</string>
+    <string name="no">Ne</string>
+
+    <string name="confirm_main_screen_title">Potvrdit hlavní obrazovku</string>
+    <string name="confirm_main_screen_text">Chcete spustit režim hlavní obrazovky? Tato funkce před spuštěním automaticky vyčistí systém, aby se předešlo chybám.</string>
+
+    <string name="mirror_screen_title">Zrcadlení obrazovky</string>
+    <string name="mirror_screen_subtitle">Otevřít hlavní obrazovku na externím displeji</string>
+
+    <string name="ready">Připraveno</string>
+    <string name="not_ready">Není zapnuto</string>
+
+    <string name="control_mode_header">REŽIM OVLÁDÁNÍ</string>
+    <string name="accessibility_mode">Usnadnění</string>
+    <string name="shizuku_mode">Shizuku</string>
+
+    <string name="shizuku_not_authorized">Shizuku nemá oprávnění</string>
+    <string name="shizuku_not_running">Shizuku neběží</string>
+    <string name="shizuku_please_authorize">Povolte prosím aplikaci přístup k Shizuku</string>
+    <string name="shizuku_please_start">Spusťte prosím Shizuku v telefonu</string>
+    <string name="grant_permission">Udělit oprávnění</string>
+
+    <string name="accessibility_not_enabled">Služba usnadnění není povolena</string>
+    <string name="accessibility_requirement_desc">Vyžaduje oprávnění k usnadnění pro reakci na gesta dotyku</string>
+    <string name="enable_in_settings">Povolit v nastavení</string>
+    <string name="cannot_open_settings">Nelze otevřít nastavení</string>
+
+    <string name="action_mirror">Zrcadlit</string>
+    <string name="action_main_screen">Hlavní obrazovka</string>
+    <string name="action_stop">Zastavit</string>
+
+    <string name="shizuku_lost_connection">Shizuku ztratilo oprávnění/připojení! Obnovování obrazovky&#8230;</string>
+</resources>

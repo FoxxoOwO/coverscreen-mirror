@@ -23,6 +23,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.view.View
 import android.widget.Toast
+import androidx.core.graphics.toColorInt
 import kotlin.concurrent.thread
 
 class CoverScreenActivity : ComponentActivity() {
@@ -32,7 +33,7 @@ class CoverScreenActivity : ComponentActivity() {
         var captureMessenger: Messenger? = null
         var isBoundToCapture = false
         var serviceBinder: IBinder? = null
-        var serviceArgs: rikka.shizuku.Shizuku.UserServiceArgs? = null
+        var serviceArgs: Shizuku.UserServiceArgs? = null
         var onServiceConnectedCallback: (() -> Unit)? = null
         
         val serviceConnection = object : android.content.ServiceConnection {
@@ -85,7 +86,7 @@ class CoverScreenActivity : ComponentActivity() {
     private var mainHeight = 2640
 
     private fun sendStartCaptureMessage() {
-        val messenger = captureMessenger ?: return
+        if (captureMessenger == null) return
         try {
             val msg = Message.obtain(null, 1).apply {
                 obj = Bundle().apply {
@@ -94,7 +95,7 @@ class CoverScreenActivity : ComponentActivity() {
                     putInt("height", mainHeight)
                 }
             }
-            messenger.send(msg)
+            captureMessenger?.send(msg)
             
             // Force redraw to prevent black screen on initial VirtualDisplay mirror
             thread {
@@ -106,8 +107,7 @@ class CoverScreenActivity : ComponentActivity() {
                         val process = method.invoke(null, arrayOf("sh", "-c", "input tap 1 1"), null, null) as Process
                         process.waitFor()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
             android.util.Log.e("ScreenMirror", "Sent START_CAPTURE to Shizuku UserService")
@@ -137,14 +137,13 @@ class CoverScreenActivity : ComponentActivity() {
             e.printStackTrace()
         } finally {
             // COMPLETELY DESTROY THE SHIZUKU PROCESS
-            try {
-                if (isBoundToCapture && serviceArgs != null) {
-                    rikka.shizuku.Shizuku.unbindUserService(serviceArgs!!, serviceConnection, true) // TRUE = destroy process!
-                    android.util.Log.e("ScreenMirror", "Unbound and destroyed Shizuku UserService completely")
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                    try {
+                        if (isBoundToCapture && serviceArgs != null) {
+                            Shizuku.unbindUserService(serviceArgs!!, serviceConnection, true) // TRUE = destroy process!
+                            android.util.Log.e("ScreenMirror", "Unbound and destroyed Shizuku UserService completely")
+                        }
+                    } catch (_: Exception) {
+                    }
             isBoundToCapture = false
             captureMessenger = null
             serviceBinder = null
@@ -199,8 +198,7 @@ class CoverScreenActivity : ComponentActivity() {
                         val process = method.invoke(null, arrayOf("sh", "-c", cmd), null, null) as Process
                         process.waitFor()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
             return
@@ -223,8 +221,7 @@ class CoverScreenActivity : ComponentActivity() {
                     method.isAccessible = true
                     val process = method.invoke(null, arrayOf("sh", "-c", "input keyevent $keyEvent"), null, null) as Process
                     process.waitFor()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -245,8 +242,7 @@ class CoverScreenActivity : ComponentActivity() {
                 method.isAccessible = true
                 val process = method.invoke(null, arrayOf("sh", "-c", "cmd device_state state 0 && sleep 0.1 && cmd device_state cancel"), null, null) as Process
                 process.waitFor()
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             }
         }
         finish()
@@ -276,7 +272,7 @@ class CoverScreenActivity : ComponentActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         
-        val displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val displayManager = getSystemService(DISPLAY_SERVICE) as DisplayManager
         
         // Calculate main display dimensions
         val display = displayManager.getDisplay(0)
@@ -363,7 +359,7 @@ class CoverScreenActivity : ComponentActivity() {
                                     processNameSuffix("mirror_service")
                                     debuggable(true)
                                 }
-                                rikka.shizuku.Shizuku.bindUserService(serviceArgs!!, serviceConnection)
+                                Shizuku.bindUserService(serviceArgs!!, serviceConnection)
                                 isBoundToCapture = true
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -434,6 +430,7 @@ class CoverScreenActivity : ComponentActivity() {
                             0
                         }
                         
+                        @android.annotation.SuppressLint("SoonBlockedPrivateApi", "BlockedPrivateApi")
                         try {
                             val setDisplayIdMethod = MotionEvent::class.java.getDeclaredMethod("setDisplayId", java.lang.Integer.TYPE)
                             setDisplayIdMethod.isAccessible = true
@@ -460,7 +457,7 @@ class CoverScreenActivity : ComponentActivity() {
                                 val duration = endTime - startTime
                                 val dx = endX - startX
                                 val dy = endY - startY
-                                val distance = Math.sqrt((dx * dx + dy * dy).toDouble())
+                                val distance = kotlin.math.hypot(dx.toDouble(), dy.toDouble())
 
                                 val scaledStartX = startX * scaleX
                                 val scaledStartY = startY * scaleY
@@ -503,14 +500,14 @@ class CoverScreenActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(Color.parseColor("#77000000")) // Translucent dark glass
+                setColor("#77000000".toColorInt()) // Translucent dark glass
                 cornerRadius = 16 * density
             }
             layoutParams = FrameLayout.LayoutParams(
                 buttonBarWidthPx,
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                gravity = Gravity.LEFT or Gravity.CENTER_VERTICAL
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
                 leftMargin = computedLeftMargin
             }
             setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
@@ -577,8 +574,7 @@ class CoverScreenActivity : ComponentActivity() {
                     processNameSuffix("mirror_service")
                 }
                 Shizuku.unbindUserService(serviceArgs, serviceConnection, true)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             }
             isBoundToCapture = false
         }
@@ -609,15 +605,14 @@ class CoverScreenActivity : ComponentActivity() {
                     if (!checkShizukuPermission()) {
                         android.util.Log.e("ScreenMirror", "Shizuku binder dead or permission revoked!")
                         runOnUiThread {
-                            Toast.makeText(this@CoverScreenActivity, "Shizuku bị mất quyền/kết nối! Đang khôi phục màn hình...", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this@CoverScreenActivity, getString(R.string.shizuku_lost_connection), Toast.LENGTH_LONG).show()
                             stopMirroring()
                         }
                         break
                     }
                 } catch (e: InterruptedException) {
                     break
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -631,7 +626,9 @@ class CoverScreenActivity : ComponentActivity() {
 
     private fun bypassHiddenApiRestrictions() {
         try {
-            org.lsposed.hiddenapibypass.HiddenApiBypass.addHiddenApiExemptions("L")
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                org.lsposed.hiddenapibypass.HiddenApiBypass.addHiddenApiExemptions("L")
+            }
             android.util.Log.e("ScreenMirror", "Successfully bypassed Hidden API restrictions in App process!")
         } catch (e: Exception) {
             android.util.Log.e("ScreenMirror", "Failed to bypass Hidden API restrictions in App process", e)

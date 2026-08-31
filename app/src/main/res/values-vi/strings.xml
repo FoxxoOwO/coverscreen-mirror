@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Cover Screen Mirror</string>
+    <string name="accessibility_desc">Dịch vụ hỗ trợ điều khiển màn hình phụ.</string>
+
+    <string name="permission_denied">Từ chối quyền chụp màn hình</string>
+    <string name="mirroring_stopped">Đã dừng trình chiếu</string>
+    <string name="mirroring_started">Đã bắt đầu trình chiếu màn hình phụ!</string>
+
+    <string name="confirm_mirroring_title">Xác nhận Phản chiếu</string>
+    <string name="confirm_mirroring_text">Bạn có muốn khởi động chế độ Phản chiếu không?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+
+    <string name="confirm_main_screen_title">Xác nhận Màn Chính</string>
+    <string name="confirm_main_screen_text">Bạn có muốn khởi động chế độ Màn Chính không? Tính năng này sẽ tự động dọn dẹp hệ thống trước khi chạy để tránh lỗi.</string>
+
+    <string name="mirror_screen_title">Mirror Screen</string>
+    <string name="mirror_screen_subtitle">Mở màn chính ở bên ngoài</string>
+
+    <string name="ready">Sẵn sàng</string>
+    <string name="not_ready">Chưa bật</string>
+
+    <string name="control_mode_header">CHẾ ĐỘ ĐIỀU KHIỂN</string>
+    <string name="accessibility_mode">Trợ năng</string>
+    <string name="shizuku_mode">Shizuku</string>
+
+    <string name="shizuku_not_authorized">Shizuku chưa cấp quyền</string>
+    <string name="shizuku_not_running">Shizuku chưa hoạt động</string>
+    <string name="shizuku_please_authorize">Vui lòng cho phép ứng dụng truy cập Shizuku</string>
+    <string name="shizuku_please_start">Hãy khởi động Shizuku trên điện thoại</string>
+    <string name="grant_permission">Cấp quyền</string>
+
+    <string name="accessibility_not_enabled">Dịch vụ trợ năng chưa bật</string>
+    <string name="accessibility_requirement_desc">Yêu cầu quyền trợ năng để phản hồi cử chỉ vuốt chạm</string>
+    <string name="enable_in_settings">Bật trong Cài đặt</string>
+    <string name="cannot_open_settings">Không thể mở cài đặt</string>
+
+    <string name="action_mirror">Phản chiếu</string>
+    <string name="action_main_screen">Màn Chính</string>
+    <string name="action_stop">Dừng</string>
+
+    <string name="shizuku_lost_connection">Shizuku bị mất quyền/kết nối! Đang khôi phục màn hình&#8230;</string>
+</resources>
