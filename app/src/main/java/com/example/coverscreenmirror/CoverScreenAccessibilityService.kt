@@ -34,29 +34,27 @@ class CoverScreenAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
-            event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+        val eventType = event.eventType
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
+            eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             
-            val packageName = event.packageName?.toString()
-            val text = event.text.toString()
+            val packageName = event.packageName?.toString() ?: ""
 
-            // Detection of "Open phone to continue" dialog (Samsung Continuity or system)
-            if (packageName == "com.samsung.android.app.continuity" || 
-                packageName == "android" || 
-                packageName == "com.android.systemui") {
-                
-                val lowerText = text.lowercase()
-                if (lowerText.contains("pokračujte") ||
-                    lowerText.contains("otevřením") ||
-                    lowerText.contains("open phone") ||
-                    lowerText.contains("continue") ||
-                    lowerText.contains("tiếp tục")) {
-                    
+            // Comprehensive detection of the "Open phone" block dialog
+            // We search for keywords in the entire UI tree for better reliability
+            val rootNode = rootInActiveWindow
+            if (rootNode != null) {
+                val keywords = listOf("pokračujte", "otevřením", "open phone", "continue", "tiếp tục")
+                val found = keywords.any { kw -> 
+                    rootNode.findAccessibilityNodeInfosByText(kw).isNotEmpty() 
+                }
+
+                if (found) {
                     val prefs = getSharedPreferences("mirror_prefs", Context.MODE_PRIVATE)
                     val autoMirror = prefs.getBoolean("auto_mirror", false)
                     
                     if (autoMirror) {
-                        android.util.Log.e("ScreenMirror", "Auto-mirror triggered by system block dialog: $text from $packageName")
+                        android.util.Log.e("ScreenMirror", "AUTO-MIRROR: signature found in $packageName. Triggering mirror...")
                         triggerAutoMirror()
                     }
                 }

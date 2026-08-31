@@ -43,4 +43,11 @@
     <string name="auto_mirror_header">AUTOMATION</string>
     <string name="auto_mirror_toggle">Auto-mirror when blocked</string>
     <string name="auto_mirror_desc">Automatically start mirroring if the \"Open phone to continue\" dialog appears.</string>
+
+    <string name="perm_required_title">Permissions Required</string>
+    <string name="perm_required_desc">For the app to work correctly on the cover screen, please grant the following permissions:</string>
+    <string name="perm_overlay">Draw over other apps (Overlay)</string>
+    <string name="perm_accessibility">Accessibility Service</string>
+    <string name="perm_shizuku">Shizuku Authorization</string>
+    <string name="perm_grant_all">Grant Missing Permissions</string>
 </resources>

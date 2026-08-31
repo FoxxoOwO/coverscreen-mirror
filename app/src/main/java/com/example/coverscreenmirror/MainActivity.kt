@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.example.coverscreenmirror.theme.CoverScreenMirrorTheme
 import rikka.shizuku.Shizuku
 import kotlin.concurrent.thread
@@ -28,6 +29,7 @@ import kotlin.concurrent.thread
 class MainActivity : ComponentActivity() {
 
     private var targetGoToHome = false
+    val refreshPermissionsTrigger = mutableStateOf(0)
 
     private val screenCaptureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -117,6 +119,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Refresh permissions when returning to app
+        refreshPermissionsTrigger.value++
+        
         val currentDisplay = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             this.display
         } else {
@@ -245,15 +250,23 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onStopMirror: () -> Unit) {
+fun AppScreen(activity: MainActivity, onStartMirror: (Boolean) -> Unit, onStopMirror: () -> Unit) {
     val prefs = activity.getSharedPreferences("mirror_prefs", Context.MODE_PRIVATE)
     var controlMode by remember { mutableStateOf(prefs.getString("control_mode", "shizuku") ?: "shizuku") }
     
     var shizukuAvailable by remember { mutableStateOf(Shizuku.pingBinder()) }
     var hasShizukuPermission by remember { mutableStateOf(checkShizukuPermission()) }
     var accessibilityEnabled by remember { mutableStateOf(isAccessibilityServiceEnabled(activity)) }
+    var overlayPermissionGranted by remember { mutableStateOf<Boolean>(isOverlayPermissionGranted(activity)) }
 
     var autoMirrorEnabled by remember { mutableStateOf(prefs.getBoolean("auto_mirror", false)) }
+
+    LaunchedEffect(activity.refreshPermissionsTrigger.value) {
+        accessibilityEnabled = isAccessibilityServiceEnabled(activity)
+        overlayPermissionGranted = isOverlayPermissionGranted(activity)
+        shizukuAvailable = Shizuku.pingBinder()
+        hasShizukuPermission = checkShizukuPermission()
+    }
 
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showMainConfirmDialog by remember { mutableStateOf(false) }
@@ -429,7 +442,7 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                                 e.printStackTrace()
                             }
                             activity.runOnUiThread {
-                                (activity as? MainActivity)?.launchCoverScreenActivity("SILENT_MIRRORING")
+                                activity.launchCoverScreenActivity("SILENT_MIRRORING")
                             }
                         }
                     },
@@ -531,6 +544,71 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
             }
             
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Permissions Status Section
+            val shizukuReady = !((controlMode == "shizuku") && (!shizukuAvailable || !hasShizukuPermission))
+            if (!shizukuReady || !accessibilityEnabled || !overlayPermissionGranted) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEB) // Light red alert background
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF3B30))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = stringResource(R.string.perm_required_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFFFF3B30),
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.perm_required_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Status items
+                        PermissionStatusItem(stringResource(R.string.perm_overlay), overlayPermissionGranted)
+                        PermissionStatusItem(stringResource(R.string.perm_accessibility), accessibilityEnabled)
+                        if (controlMode == "shizuku") {
+                            PermissionStatusItem(stringResource(R.string.perm_shizuku), shizukuAvailable && hasShizukuPermission)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = {
+                                if (!overlayPermissionGranted) {
+                                    try {
+                                        val intent = Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${activity.packageName}".toUri())
+                                        activity.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        val intent = Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                                        activity.startActivity(intent)
+                                    }
+                                } else if (!accessibilityEnabled) {
+                                    try {
+                                        activity.startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                                    } catch (_: Exception) {}
+                                } else if (controlMode == "shizuku" && !hasShizukuPermission) {
+                                    try { Shizuku.requestPermission(0) } catch (_: Exception) {}
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        ) {
+                            Text(stringResource(R.string.perm_grant_all), color = Color.White)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // Premium Control Mode Card
             Card(
@@ -818,6 +896,30 @@ fun checkShizukuPermission(): Boolean {
     }
 }
 
+@Composable
+fun PermissionStatusItem(label: String, granted: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val color = if (granted) Color(0xFF34C759) else Color(0xFFFF3B30)
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, shape = androidx.compose.foundation.shape.CircleShape)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (granted) Color.DarkGray else Color.Black,
+            fontWeight = if (granted) androidx.compose.ui.text.font.FontWeight.Normal else androidx.compose.ui.text.font.FontWeight.Bold
+        )
+    }
+}
+
 fun isAccessibilityServiceEnabled(context: Context): Boolean {
     val expectedComponentName = android.content.ComponentName(context, CoverScreenAccessibilityService::class.java)
     val enabledServicesSetting = android.provider.Settings.Secure.getString(
@@ -834,4 +936,8 @@ fun isAccessibilityServiceEnabled(context: Context): Boolean {
         }
     }
     return false
+}
+
+fun isOverlayPermissionGranted(context: Context): Boolean {
+    return android.provider.Settings.canDrawOverlays(context)
 }

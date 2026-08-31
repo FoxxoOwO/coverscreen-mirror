@@ -43,4 +43,11 @@
     <string name="auto_mirror_header">AUTOMATIZACE</string>
     <string name="auto_mirror_toggle">Auto-zrcadlení při blokování</string>
     <string name="auto_mirror_desc">Automaticky spustí zrcadlení, pokud se objeví dialog \"Pro pokračování otevřete telefon\".</string>
+
+    <string name="perm_required_title">Vyžadována oprávnění</string>
+    <string name="perm_required_desc">Pro správnou funkci aplikace na vnějším displeji prosím udělte následující oprávnění:</string>
+    <string name="perm_overlay">Zobrazení nad ostatními aplikacemi</string>
+    <string name="perm_accessibility">Služba usnadnění</string>
+    <string name="perm_shizuku">Autorizace Shizuku</string>
+    <string name="perm_grant_all">Udělit chybějící oprávnění</string>
 </resources>

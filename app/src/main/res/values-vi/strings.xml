@@ -43,4 +43,11 @@
     <string name="auto_mirror_header">TỰ ĐỘNG HÓA</string>
     <string name="auto_mirror_toggle">Tự động phản chiếu khi bị chặn</string>
     <string name="auto_mirror_desc">Tự động khởi động phản chiếu nếu hiện thông báo \"Mở điện thoại để tiếp tục\".</string>
+
+    <string name="perm_required_title">Yêu cầu quyền truy cập</string>
+    <string name="perm_required_desc">Để ứng dụng hoạt động chính xác trên màn hình phụ, vui lòng cấp các quyền sau:</string>
+    <string name="perm_overlay">Hiển thị trên các ứng dụng khác</string>
+    <string name="perm_accessibility">Dịch vụ hỗ trợ (Trợ năng)</string>
+    <string name="perm_shizuku">Ủy quyền Shizuku</string>
+    <string name="perm_grant_all">Cấp các quyền còn thiếu</string>
 </resources>
