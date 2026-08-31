@@ -21,6 +21,9 @@ An application that supports mirroring and controlling the main screen from the 
 
 5. **Folding Sensor Limit Bypass**:
    - Automatically injects the `cmd device_state state 4` command in the background to "trick" the system into thinking the device is open. This maintains maximum output quality without being restricted by battery-saving features. Instantly restores the state when pressing Stop.
+  
+6. **Auto detetect "Open phone to continue"**
+   - Every time your phone asks you to open phone to continue the casting will start automatically.
 
 ## 📱 System Requirements
 
