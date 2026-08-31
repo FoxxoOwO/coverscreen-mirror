@@ -32,7 +32,37 @@ class CoverScreenAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Accessibility events are not needed for UI automation anymore
+        if (event == null) return
+
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val packageName = event.packageName?.toString()
+            val text = event.text.toString()
+
+            // Detection of "Open phone to continue" dialog (Samsung Continuity or system)
+            if (packageName == "com.samsung.android.app.continuity" || packageName == "android") {
+                if (text.contains("pokračování", ignoreCase = true) ||
+                    text.contains("open phone", ignoreCase = true) ||
+                    text.contains("tiếp tục", ignoreCase = true)) {
+                    
+                    val prefs = getSharedPreferences("mirror_prefs", Context.MODE_PRIVATE)
+                    val autoMirror = prefs.getBoolean("auto_mirror", false)
+                    
+                    if (autoMirror) {
+                        android.util.Log.e("ScreenMirror", "Auto-mirror triggered by system block dialog")
+                        triggerAutoMirror()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun triggerAutoMirror() {
+        // We launch MainActivity with a special flag to trigger mirroring immediately
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra("AUTO_START_MIRROR", true)
+        }
+        startActivity(intent)
     }
 
     override fun onInterrupt() {}

@@ -40,4 +40,7 @@
     <string name="action_stop">Stop</string>
 
     <string name="shizuku_lost_connection">Shizuku lost permission/connection! Restoring screen&#8230;</string>
+    <string name="auto_mirror_header">AUTOMATION</string>
+    <string name="auto_mirror_toggle">Auto-mirror when blocked</string>
+    <string name="auto_mirror_desc">Automatically start mirroring if the \"Open phone to continue\" dialog appears.</string>
 </resources>

@@ -40,4 +40,7 @@
     <string name="action_stop">Zastavit</string>
 
     <string name="shizuku_lost_connection">Shizuku ztratilo oprávnění/připojení! Obnovování obrazovky&#8230;</string>
+    <string name="auto_mirror_header">AUTOMATIZACE</string>
+    <string name="auto_mirror_toggle">Auto-zrcadlení při blokování</string>
+    <string name="auto_mirror_desc">Automaticky spustí zrcadlení, pokud se objeví dialog \"Pro pokračování otevřete telefon\".</string>
 </resources>

@@ -40,4 +40,7 @@
     <string name="action_stop">Dừng</string>
 
     <string name="shizuku_lost_connection">Shizuku bị mất quyền/kết nối! Đang khôi phục màn hình&#8230;</string>
+    <string name="auto_mirror_header">TỰ ĐỘNG HÓA</string>
+    <string name="auto_mirror_toggle">Tự động phản chiếu khi bị chặn</string>
+    <string name="auto_mirror_desc">Tự động khởi động phản chiếu nếu hiện thông báo \"Mở điện thoại để tiếp tục\".</string>
 </resources>

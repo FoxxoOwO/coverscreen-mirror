@@ -76,6 +76,43 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        handleAutoStartIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleAutoStartIntent(intent)
+    }
+
+    private fun handleAutoStartIntent(intent: Intent) {
+        if (intent.getBooleanExtra("AUTO_START_MIRROR", false)) {
+            // Check if Shizuku is ready for "Main Screen" mode (most reliable for auto-start)
+            if (Shizuku.pingBinder() && checkShizukuPermission()) {
+                thread {
+                    try {
+                        // 1. Cleanup zombies
+                        val method = Class.forName("rikka.shizuku.Shizuku").getDeclaredMethod("newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java)
+                        method.isAccessible = true
+                        val cleanupProc = method.invoke(null, arrayOf("sh", "-c", "pkill -f mirror_service"), null, null) as Process
+                        cleanupProc.waitFor()
+                        Thread.sleep(200)
+
+                        // 2. Unfold state
+                        val proc = method.invoke(null, arrayOf("sh", "-c", "cmd device_state state 4"), null, null) as Process
+                        proc.waitFor()
+                        Thread.sleep(500)
+                    } catch (_: Exception) {}
+                    
+                    runOnUiThread {
+                        launchCoverScreenActivity("SILENT_MIRRORING")
+                    }
+                }
+            } else {
+                // Fallback to normal mirroring if Shizuku is not ready
+                startMirroring(true)
+            }
+        }
     }
 
     override fun onResume() {
@@ -216,12 +253,18 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
     var hasShizukuPermission by remember { mutableStateOf(checkShizukuPermission()) }
     var accessibilityEnabled by remember { mutableStateOf(isAccessibilityServiceEnabled(activity)) }
 
+    var autoMirrorEnabled by remember { mutableStateOf(prefs.getBoolean("auto_mirror", false)) }
+
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showMainConfirmDialog by remember { mutableStateOf(false) }
     var targetGoToHome by remember { mutableStateOf(false) }
 
     LaunchedEffect(controlMode) {
         prefs.edit { putString("control_mode", controlMode) }
+    }
+
+    LaunchedEffect(autoMirrorEnabled) {
+        prefs.edit { putBoolean("auto_mirror", autoMirrorEnabled) }
     }
 
     LaunchedEffect(Unit) {
@@ -621,6 +664,65 @@ fun AppScreen(activity: ComponentActivity, onStartMirror: (Boolean) -> Unit, onS
                                 Text(stringResource(R.string.enable_in_settings), color = Color.White, style = MaterialTheme.typography.labelSmall)
                             }
                         }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Automation Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = Color(0xFFE5E5EA)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.auto_mirror_header),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.DarkGray,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        letterSpacing = androidx.compose.ui.unit.TextUnit(1.2f, androidx.compose.ui.unit.TextUnitType.Sp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { autoMirrorEnabled = !autoMirrorEnabled },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.auto_mirror_toggle),
+                                color = Color.Black,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.auto_mirror_desc),
+                                color = Color.DarkGray,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                        Switch(
+                            checked = autoMirrorEnabled,
+                            onCheckedChange = { autoMirrorEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color.Black,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFE5E5EA)
+                            )
+                        )
                     }
                 }
             }
