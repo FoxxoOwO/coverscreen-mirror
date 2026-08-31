@@ -66,7 +66,9 @@ class ScreenMirrorService : Service() {
     private fun launchCoverScreenActivityOnDisplay1() {
         try {
             val options = android.app.ActivityOptions.makeBasic()
-            options.launchDisplayId = 1
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                options.launchDisplayId = 1
+            }
             val intent = Intent(this, CoverScreenActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
@@ -176,20 +178,32 @@ class ScreenMirrorService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            "mirror_service",
-            "Screen Mirror Service",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "mirror_service",
+                "Screen Mirror Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
     }
 
     private fun buildNotification(): Notification {
-        return Notification.Builder(this, "mirror_service")
-            .setContentTitle("Screen Mirroring")
-            .setContentText("Casting screen to Cover Display")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .build()
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            Notification.Builder(this, "mirror_service")
+                .setContentTitle("Screen Mirroring")
+                .setContentText("Casting screen to Cover Display")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+                .setContentTitle("Screen Mirroring")
+                .setContentText("Casting screen to Cover Display")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(Notification.PRIORITY_LOW)
+                .build()
+        }
     }
 }

@@ -55,7 +55,9 @@ class ScreenCaptureService(private val context: Context) : Binder() {
 
     private fun bypassHiddenApiRestrictions() {
         try {
-            HiddenApiBypass.addHiddenApiExemptions("L")
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                HiddenApiBypass.addHiddenApiExemptions("L")
+            }
             android.util.Log.e("ScreenMirror", "Successfully bypassed Hidden API restrictions in UserService!")
         } catch (e: Exception) {
             android.util.Log.e("ScreenMirror", "Failed to bypass Hidden API restrictions in UserService", e)
