@@ -24,6 +24,7 @@ class CoverScreenAccessibilityService : AccessibilityService() {
 
     private var windowManager: WindowManager? = null
     private var navigationBarView: View? = null
+    private var lastTriggerTime: Long = 0
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -50,11 +51,17 @@ class CoverScreenAccessibilityService : AccessibilityService() {
                 }
 
                 if (found) {
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastTriggerTime < 5000) {
+                        return // Cooldown to prevent loops and reboots
+                    }
+                    
                     val prefs = getSharedPreferences("mirror_prefs", Context.MODE_PRIVATE)
                     val autoMirror = prefs.getBoolean("auto_mirror", false)
                     
                     if (autoMirror) {
-                        android.util.Log.e("ScreenMirror", "AUTO-MIRROR: signature found in $packageName. Triggering mirror...")
+                        lastTriggerTime = currentTime
+                        android.util.Log.e("ScreenMirror", "AUTO-MIRROR: signature found. Triggering...")
                         triggerAutoMirror()
                     }
                 }

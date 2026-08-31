@@ -29,6 +29,7 @@ import kotlin.concurrent.thread
 class MainActivity : ComponentActivity() {
 
     private var targetGoToHome = false
+    private var isAutoStarting = false
     val refreshPermissionsTrigger = mutableStateOf(0)
 
     private val screenCaptureLauncher = registerForActivityResult(
@@ -89,17 +90,21 @@ class MainActivity : ComponentActivity() {
 
     private fun handleAutoStartIntent(intent: Intent) {
         if (intent.getBooleanExtra("AUTO_START_MIRROR", false)) {
+            if (isAutoStarting || CoverScreenActivity.isRunningOnCover) {
+                return
+            }
+            
+            isAutoStarting = true
             // Check if Shizuku is ready for "Main Screen" mode (most reliable for auto-start)
             if (Shizuku.pingBinder() && checkShizukuPermission()) {
                 thread {
                     try {
-                        // 1. Cleanup zombies
+                        // 1. Cleanup zombies (Safer version: only if needed)
                         val method = Class.forName("rikka.shizuku.Shizuku").getDeclaredMethod("newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java)
                         method.isAccessible = true
-                        val cleanupProc = method.invoke(null, arrayOf("sh", "-c", "pkill -f mirror_service"), null, null) as Process
-                        cleanupProc.waitFor()
-                        Thread.sleep(200)
-
+                        
+                        // We skip pkill here to avoid destabilizing the system if multiple threads run
+                        
                         // 2. Unfold state
                         val proc = method.invoke(null, arrayOf("sh", "-c", "cmd device_state state 4"), null, null) as Process
                         proc.waitFor()
@@ -107,10 +112,12 @@ class MainActivity : ComponentActivity() {
                     } catch (_: Exception) {}
                     
                     runOnUiThread {
+                        isAutoStarting = false
                         launchCoverScreenActivity("SILENT_MIRRORING")
                     }
                 }
             } else {
+                isAutoStarting = false
                 // Fallback to normal mirroring if Shizuku is not ready
                 startMirroring(true)
             }
