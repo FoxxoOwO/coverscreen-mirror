@@ -34,21 +34,29 @@ class CoverScreenAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
+            event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            
             val packageName = event.packageName?.toString()
             val text = event.text.toString()
 
             // Detection of "Open phone to continue" dialog (Samsung Continuity or system)
-            if (packageName == "com.samsung.android.app.continuity" || packageName == "android") {
-                if (text.contains("pokračování", ignoreCase = true) ||
-                    text.contains("open phone", ignoreCase = true) ||
-                    text.contains("tiếp tục", ignoreCase = true)) {
+            if (packageName == "com.samsung.android.app.continuity" || 
+                packageName == "android" || 
+                packageName == "com.android.systemui") {
+                
+                val lowerText = text.lowercase()
+                if (lowerText.contains("pokračujte") ||
+                    lowerText.contains("otevřením") ||
+                    lowerText.contains("open phone") ||
+                    lowerText.contains("continue") ||
+                    lowerText.contains("tiếp tục")) {
                     
                     val prefs = getSharedPreferences("mirror_prefs", Context.MODE_PRIVATE)
                     val autoMirror = prefs.getBoolean("auto_mirror", false)
                     
                     if (autoMirror) {
-                        android.util.Log.e("ScreenMirror", "Auto-mirror triggered by system block dialog")
+                        android.util.Log.e("ScreenMirror", "Auto-mirror triggered by system block dialog: $text from $packageName")
                         triggerAutoMirror()
                     }
                 }
